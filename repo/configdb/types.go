@@ -27,6 +27,8 @@ func New(logger *zap.SugaredLogger, info *dbscan.DbInfo, infoType dbscan.DbInfoT
 	if info == nil {
 		return nil, fmt.Errorf("%s dbinfo is nil", modError)
 	}
+	// persist type for InfoType()
+	db.infoType = infoType
 	// открываем сесиию в этом методе если нет ошибки
 	if err := db.Check(); err != nil {
 		return nil, fmt.Errorf("%s error check %v", modError, err)
@@ -34,7 +36,10 @@ func New(logger *zap.SugaredLogger, info *dbscan.DbInfo, infoType dbscan.DbInfoT
 	return db, nil
 }
 
-func (c *DbConfig) Close() (err error) {
+func (c *DbConfig) Close() error {
+	if c.dbSession == nil {
+		return nil
+	}
 	return c.dbSession.Close()
 }
 

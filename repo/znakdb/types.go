@@ -21,7 +21,8 @@ type DbZnak struct {
 
 func New(info *dbscan.DbInfo, infoType dbscan.DbInfoType) (*DbZnak, error) {
 	db := &DbZnak{
-		dbInfo: info,
+		dbInfo:   info,
+		infoType: infoType,
 	}
 	if info == nil {
 		return nil, fmt.Errorf("%s dbinfo is nil", modError)
@@ -34,6 +35,9 @@ func New(info *dbscan.DbInfo, infoType dbscan.DbInfoType) (*DbZnak, error) {
 }
 
 func (c *DbZnak) Close() (err error) {
+	if c.dbSession == nil {
+		return nil
+	}
 	return c.dbSession.Close()
 }
 

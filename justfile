@@ -4,7 +4,7 @@ shebang := 'pwsh.exe'
 # Variables
 exe_name := "agregatkrt"
 mod_name := "agregat"
-ld_flags :="-s -w -X agregat/Mode=production"
+ld_flags :="-s -w -X main.Mode=production"
 
 default:
   just --list

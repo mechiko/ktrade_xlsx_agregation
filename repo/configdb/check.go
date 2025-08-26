@@ -12,6 +12,9 @@ func (r *DbConfig) Check() (err error) {
 		}
 	}()
 
+	if r.dbInfo == nil {
+		return fmt.Errorf("%s dbInfo is nil", modError)
+	}
 	if !r.dbInfo.Exists {
 		return fmt.Errorf("dbConfig dbInfo.Exists false")
 	}

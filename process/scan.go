@@ -14,16 +14,17 @@ func (p *process) ScanRecords() (err error) {
 	if info == nil {
 		return fmt.Errorf("базы 4z не найдено")
 	}
-	db, err := znakdb.New(info, dbscan.Config)
+	db, err := znakdb.New(info, dbscan.TrueZnak)
 	if err != nil {
-		return fmt.Errorf("error open config.db")
+		return fmt.Errorf("open znak db: %w", err)
 	}
 	defer func() {
-		if errclose := db.Close(); errclose != nil {
+		if cerr := db.Close(); cerr != nil {
 			if err != nil {
-				err = fmt.Errorf("%v %w", errclose, err)
+				// keep original op error and append close error
+				err = fmt.Errorf("%w; close error: %v", err, cerr)
 			} else {
-				err = fmt.Errorf("%v", errclose)
+				err = cerr
 			}
 		}
 	}()
@@ -43,7 +44,7 @@ func (p *process) ScanRecords() (err error) {
 		}
 		p.Utilisation[urStr].KM = append(p.Utilisation[urStr].KM, rec)
 	}
-	return nil
+	return
 }
 
 func (p *process) ScanPalet() (err error) {

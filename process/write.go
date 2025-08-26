@@ -8,21 +8,22 @@ import (
 	"github.com/mechiko/dbscan"
 )
 
-func (p *process) WriteUtilisation() error {
+func (p *process) WriteUtilisation() (err error) {
 	info := p.repo.Info(dbscan.TrueZnak)
 	if info == nil {
 		return fmt.Errorf("базы 4z не найдено")
 	}
-	db, err := znakdb.New(info, dbscan.Config)
+	db, err := znakdb.New(info, dbscan.TrueZnak)
 	if err != nil {
-		return fmt.Errorf("error open config.db")
+		return fmt.Errorf("error open 4z db")
 	}
 	defer func() {
-		if errclose := db.Close(); errclose != nil {
+		if cerr := db.Close(); cerr != nil {
 			if err != nil {
-				err = fmt.Errorf("%v %w", errclose, err)
+				// keep original op error and append close error
+				err = fmt.Errorf("%w; close error: %v", err, cerr)
 			} else {
-				err = fmt.Errorf("%v", errclose)
+				err = cerr
 			}
 		}
 	}()
@@ -36,5 +37,5 @@ func (p *process) WriteUtilisation() error {
 		}
 	}
 	reductor.Instance().SetModel("", &model)
-	return nil
+	return
 }

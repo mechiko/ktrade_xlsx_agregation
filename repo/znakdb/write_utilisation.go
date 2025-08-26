@@ -39,7 +39,7 @@ func (z *DbZnak) WriteUtilisation(cises []*domain.Record, model *reductor.Model,
 		}
 		return nil
 	})
-	return rid, nil
+	return rid, err
 }
 
 func (z *DbZnak) writeUtilisation(tx db.Session, cis []*domain.Record, model *reductor.Model, prod, exp time.Time) (rid int64, err error) {

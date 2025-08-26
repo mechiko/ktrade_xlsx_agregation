@@ -12,8 +12,10 @@ func (c *Checks) TestDbConfigContact() error {
 	if err != nil {
 		return fmt.Errorf("%w", err)
 	}
-	defer db.Close()
-	defer c.repo.Unlock(dbscan.Config)
+	if db != nil {
+		defer c.repo.Unlock(dbscan.Config)
+		defer db.Close()
+	}
 
 	dbCfg, ok := db.(*configdb.DbConfig)
 	if !ok {
@@ -32,8 +34,8 @@ func (c *Checks) TestDbConfigReleaseMethod() error {
 	if err != nil {
 		return fmt.Errorf("%w", err)
 	}
-	defer db.Close()
 	defer c.repo.Unlock(dbscan.Config)
+	defer db.Close()
 
 	dbCfg, ok := db.(*configdb.DbConfig)
 	if !ok {

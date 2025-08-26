@@ -44,9 +44,9 @@ func createLogger(output []string, debug bool) (*zap.Logger, error) {
 	}
 	config := zap.Config{
 		Level:             zap.NewAtomicLevelAt(level),
-		Development:       true,
+		Development:       debug,
 		DisableCaller:     false,
-		DisableStacktrace: false,
+		DisableStacktrace: !debug,
 		Encoding:          "console",
 		Sampling:          nil,
 		EncoderConfig:     encoderConfig,

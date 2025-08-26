@@ -34,7 +34,7 @@ func NewRecord(row []string) (*Record, error) {
 	}
 	expired, err := parseDate(row[4])
 	if err != nil {
-		return nil, fmt.Errorf("ошибка даты срока годности %s%w", row[3], err)
+		return nil, fmt.Errorf("ошибка даты срока годности %s%w", row[4], err)
 	}
 
 	r := &Record{

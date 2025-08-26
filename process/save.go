@@ -10,6 +10,9 @@ import (
 )
 
 func (p *process) Save(out string) error {
+	if err := os.MkdirAll(out, 0o755); err != nil {
+		return fmt.Errorf("create out dir %q: %w", out, err)
+	}
 	fileNameKoroba := "koroba_" + p.NameFileWithoutExt + ".csv"
 	fileNameKoroba = filepath.Join(out, fileNameKoroba)
 	if err := saveTxt(fileNameKoroba, p.ListKoroba); err != nil {

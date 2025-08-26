@@ -7,9 +7,12 @@ import (
 
 func (z *DbZnak) FindOrders(in []*domain.Record) (err error) {
 	sess := z.dbSession
-	for _, rec := range in {
+	for i, rec := range in {
+		if rec == nil || rec.Cis == nil {
+			return fmt.Errorf("record[%d]: CIS is nil", i)
+		}
 		order := &domain.OrderMarkCodesSerialNumbers{}
-		res := sess.Collection("order_mark_codes_serial_numbers struct").Find("code", rec.Cis.Code)
+		res := sess.Collection("order_mark_codes_serial_numbers").Find("code", rec.Cis.Code)
 		if err := res.One(order); err != nil {
 			return fmt.Errorf("ошибка поиска КМ [%s] в базе %w", rec.Cis.Code, err)
 		}
