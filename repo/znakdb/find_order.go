@@ -1,0 +1,31 @@
+package znakdb
+
+import (
+	"agregat/domain"
+	"fmt"
+)
+
+func (z *DbZnak) FindOrders(in []*domain.Record) (err error) {
+	sess := z.dbSession
+	for _, rec := range in {
+		order := &domain.OrderMarkCodesSerialNumbers{}
+		res := sess.Collection("order_mark_codes_serial_numbers struct").Find("code", rec.Cis.Code)
+		if err := res.One(order); err != nil {
+			return fmt.Errorf("ошибка поиска КМ [%s] в базе %w", rec.Cis.Code, err)
+		}
+		rec.Order = int64(order.IdOrderMarkCodes)
+		rec.Serial = order.SerialNumber
+	}
+	return nil
+}
+
+// func (z *DbZnak) Order(id int64) (sl []*dbznak.OrderMarkCodes, err error) {
+// 	sess := z.dbSession
+// 	defer sess.Close()
+
+// 	err = sess.Collection("order_mark_codes").Find("cis_type like ? and archive <> 1", cisType).OrderBy("id desc").All(&sl)
+// 	if err != nil {
+// 		return nil, fmt.Errorf("db:znak upper CisTypeOrders %w", err)
+// 	}
+// 	return sl, nil
+// }

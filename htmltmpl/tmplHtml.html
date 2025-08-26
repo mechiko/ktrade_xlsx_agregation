@@ -1,0 +1,134 @@
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title></title>
+  <style type="text/css">
+      @page :left {
+          margin-left: 1cm;
+      }
+      @page :right {
+          margin-left: 1cm;
+      }
+      @page :blank {
+          @top-center {
+              content: ""
+          }
+      }
+      @page: left {
+          @bottom-left {
+              content: "Стр " counter(page) " из " counter(pages);
+          }
+      }
+      @media print {
+          thead {
+              display: table-header-group;
+          }
+          body,
+          page {
+              margin: 0;
+              box-shadow: 0;
+              /* font-family: Helvetica, Arial, sans-serif !important; */
+              /*font-family: "Lucida Console", monospace !important;*/
+              font-size: 12px !important;
+              font-weight: 400;
+              font-family: 'Roboto Condensed', sans-serif;
+              font-style: normal;
+          }
+          .no-print,
+          .no-print * {
+              display: none !important;
+          }
+      }
+      @media print {
+        .print-friendly tr { page-break-inside: avoid; }
+      }
+      @media print {
+        .print-friendly tr:before,
+        .print-friendly tr:after {
+          content: "";
+          display: block;
+          height: 4px;
+        }
+      }
+      page {
+          background: white;
+          display: block;
+          margin: 0 auto;
+      }
+      page[size="A4"][layout="portrait"] {
+          width: 21cm;
+          height: 29.7cm;
+      }
+      page[size="A4"] {
+          width: 29.7cm;
+          height: 21cm;
+      }
+      * {
+          margin: 0;
+          padding: 0;
+          text-indent: 0;
+          box-sizing: border-box;
+      }
+      html,
+      body {
+          padding: 0;
+          margin: 0;
+          color: black;
+      }
+      body {
+          /* font-family: Helvetica, Arial, sans-serif !important; */
+          /* font-family: Avenir, Helvetica, Arial, sans-serif; */
+          /* font-family: "Lucida Console", monospace !important;*/
+          font-family: 'Roboto Condensed', sans-serif;
+          font-size: 12pt;
+          font-weight: 400;
+          margin: 0;
+          padding: 0;
+          background-color: white;
+      }
+      tr { font-size: 12pt; }
+      td { font-size: 12pt; }
+      /* table, th, td {
+        border: 1px solid black;
+        border-collapse: collapse;
+      } */
+      .center-table {
+        margin-left: auto;
+        margin-right: auto;
+        /* Optional: Set a width for the table if it's not full-width by default */
+        width: 80%;
+      }
+  </style>
+</head>
+<body>
+<div style="text-align: center; font-size: 14pt; font-weight: 700;">Протокол</div>
+<div></div>
+<table class="center-table" style="text-align: center; margin-top: 20px;">
+  <tr>
+    <th >Заказ</th>
+    <th >Отчет нанесения</th>
+    <th >Кол-во КМ</th>
+    <th >Произведено</th>
+    <th >Срок</th>
+  </tr>
+{{range $key, $ur := $.Utilisation }}
+  <tr>
+    <td >{{$ur.Order}}</td>
+    <td >{{$ur.ReportID}}</td>
+    <td >{{len $ur.KM}}</td>
+    <td >{{dt $ur.Prod}}</td>
+    <td >{{dt $ur.Exp}}</td>
+  </tr>
+{{end}}
+</table>
+<div style="text-align: center; font-size: 14pt; font-weight: 500; margin-top: 16px;">Всего КМ обработано : {{len $.KM}}</div>
+<div style="text-align: center; font-size: 14pt; font-weight: 500; margin-top: 16px;">Агрегация</div>
+<div style="text-align: center; font-size: 10pt; margin-top: 6px;">сформировано {{len $.Koroba}} коробок</div>
+<div style="text-align: center; font-size: 10pt; margin-top: 6px;">сформировано {{len $.Palet}} палет</div>
+</table>
+</body>
+</html>
+
+
+
+
