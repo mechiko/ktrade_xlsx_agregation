@@ -1,0 +1,157 @@
+.env
+.env[-_.]*
+
+# Ignore log directories and files.
+
+*.log
+*.logs
+
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# It's better to unpack these files and commit the raw source because
+# git has its own built in compression methods.
+*.7z
+*.jar
+*.rar
+*.zip
+*.gz
+*.gzip
+*.tgz
+*.bzip
+*.bzip2
+*.bz2
+*.xz
+*.lzma
+*.cab
+*.xar
+*.zst
+*.tzst
+
+# Packing-only formats
+*.iso
+*.tar
+
+# Package management formats
+*.dmg
+*.xpi
+*.gem
+*.egg
+*.deb
+*.rpm
+*.msi
+*.msm
+*.msp
+*.txz
+
+# backup
+*.bak
+*.gho
+*.ori
+*.orig
+*.tmp
+
+*.patch
+*.diff
+
+# Private key
+*.ppk
+
+# Windows thumbnail cache files
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+
+# Dump file
+*.stackdump
+
+# Folder config file
+[Dd]esktop.ini
+
+# Recycle Bin used on file shares
+$RECYCLE.BIN/
+
+# Windows Installer files
+*.msi
+*.msix
+*.msm
+*.msp
+
+# Windows shortcuts
+*.lnk
+
+# OpenSSL-related files best not committed
+
+## Certificate Authority
+*.ca
+
+## Certificate
+*.crt
+
+## Certificate Sign Request
+*.csr
+
+## Certificate
+*.der
+
+## Key database file
+*.kdb
+
+## OSCP request data
+*.org
+
+## PKCS #12
+*.p12
+
+## PEM-encoded certificate data
+*.pem
+
+## Random number seed
+*.rnd
+
+## SSLeay data
+*.ssleay
+
+## S/MIME message
+*.smime
+
+dist/
+distr/
+distrib/
+distbin/
+output/
+
+.nevakod/
+.dist/
+.data/
+.vscode/
+
+# Go-specific binary blobs
+*.syso
+*.syso_*
+
+*.db
+*.db.*
+*.db-*
+
+# Go coverage profiles
+coverage*.out
+*.coverprofile
+
+
+tmp/**/*.csv
+tmp/**/*.{xls,xlsx}
+in/**/*.csv
+out/**/*.{xls,xlsx}
+out/**/*.{htm,html}
+cmd/**/*.csv
+cmd/**/*.{xls,xlsx}
+cmd/**/*.{htm,html}
