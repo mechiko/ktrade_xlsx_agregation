@@ -103,15 +103,27 @@
 <body>
 <div style="text-align: center; font-size: 14pt; font-weight: 700;">Протокол</div>
 <div style="text-align: center; font-size: 14pt; font-weight: 500; margin-top: 16px;">Всего КМ обработано : {{len $.Records}}</div>
-<table class="center-table" style="text-align: center; margin-top: 20px;">
-  <tr>
-    <th >Ошибки</th>
-  </tr>
-{{range $key, $err := $.KMErrors }}
-  <tr>
-    <td >{{$err}}</td>
-  </tr>
-{{end}}
+<table class="center-table print-friendly" style="width:100%; text-align: center; margin-top: 20px;">
+  <thead>
+    <tr>
+      <th></th>
+      <th style="text-align: left;width: 70%;" scope="col">Ошибки</th>
+    </tr>
+  </thead>
+  {{if $.KMErrors}}
+  <tbody>
+    {{range $key, $err := $.KMErrors }}
+    <tr>
+      <td></td>
+      <td style="text-align: left; font-size: 10pt;padding-left: 2px;">{{ $err }}</td>
+    </tr>
+    {{end}}
+  </tbody>
+  {{else}}
+  <tbody>
+    <tr><td>Ошибок нет</td></tr>
+  </tbody>
+  {{end}}
 </table>
 </body>
 </html>

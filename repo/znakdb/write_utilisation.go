@@ -84,7 +84,6 @@ func (z *DbZnak) writeUtilisation(tx db.Session, cis []*domain.Record, model *re
 			if _, err := tx.Collection("order_mark_utilisation_codes").Insert(km); err != nil {
 				return 0, err
 			}
-			fmt.Printf("write %d\n", i)
 		}
 	}
 	return report.Id, nil

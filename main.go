@@ -93,6 +93,7 @@ func main() {
 	outDir, err := utility.DialogSelectDir("")
 	if err != nil {
 		outDir = ""
+		errMessageExit("выбор выходного каталога отменен", "программа завершена")
 	}
 
 	// поиск заказов по маркам для отчетов нанесения

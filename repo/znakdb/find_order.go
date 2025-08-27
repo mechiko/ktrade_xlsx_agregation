@@ -21,7 +21,7 @@ func (z *DbZnak) FindOrders(in []*domain.Record) (errArray []error) {
 		// убрал условие чтобы увидеть реальный статус марки .And("status = ?", "Напечатан")
 		if err := res.One(order); err != nil {
 			if errors.Is(err, db.ErrNoMoreRows) {
-				errArray = append(errArray, fmt.Errorf("поиска КМ: [%s] в базе не дал результата %w", rec.Cis.Code))
+				errArray = append(errArray, fmt.Errorf("поиск КМ: [%s] в базе не дал результата: %w", rec.Cis.Code, db.ErrNoMoreRows))
 				continue
 			}
 			errArray = append(errArray, fmt.Errorf("ошибка поиска КМ [%s] в базе %w", rec.Cis.Code, err))
