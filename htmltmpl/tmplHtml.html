@@ -7,7 +7,7 @@
           margin-left: 1cm;
       }
       @page :right {
-          margin-left: 1cm;
+          margin-right: 1cm;
       }
       @page :blank {
           @top-center {
@@ -101,16 +101,19 @@
   </style>
 </head>
 <body>
+<page size="A4" layout="portrait">
 <div style="text-align: center; font-size: 14pt; font-weight: 700;">Протокол</div>
 <div></div>
 <table class="center-table" style="text-align: center; margin-top: 20px;">
-  <tr>
-    <th >Заказ</th>
-    <th >Отчет нанесения</th>
-    <th >Кол-во КМ</th>
-    <th >Произведено</th>
-    <th >Срок</th>
-  </tr>
+  <thead>
+    <tr>
+      <th>Заказ</th>
+      <th>Отчет нанесения</th>
+      <th>Кол-во КМ</th>
+      <th>Произведено</th>
+      <th>Срок</th>
+    </tr>
+  </thead>
 {{range $key, $ur := $.Utilisation }}
   <tr>
     <td >{{$ur.Order}}</td>
@@ -130,6 +133,7 @@
 <div style="text-align: center;font-size: 10pt;margin-top: 6px;padding-left: 10px;">{{$key}}</div>
 {{end}}
 </div>
+</page>
 </body>
 </html>
 
