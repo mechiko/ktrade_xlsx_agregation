@@ -2,7 +2,7 @@ package domain
 
 type Utilisation struct {
 	Id               int64  `db:"id,omitempty"`
-	IdOrderMarkCodes int    `db:"id_order_mark_codes"`
+	IdOrderMarkCodes int64  `db:"id_order_mark_codes"`
 	CreateDate       string `db:"create_date"`
 	ProductionDate   string `db:"production_date"`
 	ExpirationDate   string `db:"expiration_date"`
@@ -60,7 +60,7 @@ type Order struct {
 
 type OrderMarkCodesSerialNumbers struct {
 	Id               int64  `db:"id"`
-	IdOrderMarkCodes int    `db:"id_order_mark_codes"`
+	IdOrderMarkCodes int64  `db:"id_order_mark_codes"`
 	Gtin             string `db:"gtin"`
 	SerialNumber     string `db:"serial_number"`
 	Code             string `db:"code"`

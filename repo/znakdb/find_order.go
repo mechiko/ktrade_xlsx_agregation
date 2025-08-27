@@ -22,7 +22,7 @@ func (z *DbZnak) FindOrders(in []*domain.Record) (err error) {
 			}
 			return fmt.Errorf("ошибка поиска КМ [%s] в базе %w", rec.Cis.Code, err)
 		}
-		rec.Order = int64(order.IdOrderMarkCodes)
+		rec.Order = order.IdOrderMarkCodes
 		rec.Serial = order.SerialNumber
 	}
 	return nil

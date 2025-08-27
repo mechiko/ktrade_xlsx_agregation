@@ -51,7 +51,7 @@ func (z *DbZnak) writeUtilisation(tx db.Session, cis []*domain.Record, model *re
 	report := &domain.Utilisation{
 		CreateDate:       time.Now().Local().Format("2006.01.02 15:04:05"),
 		PrimaryDocDate:   time.Now().Local().Format("2006.01.02 15:04:05"),
-		IdOrderMarkCodes: int(model.Order),
+		IdOrderMarkCodes: model.Order,
 		ProductionDate:   prod.Local().Format("2006.01.02"),
 		ExpirationDate:   exp.Local().Format("2006.01.02"),
 		UsageType:        "Нанесение КМ подтверждено",
@@ -70,6 +70,9 @@ func (z *DbZnak) writeUtilisation(tx db.Session, cis []*domain.Record, model *re
 	} else {
 		model.Utilisation = append(model.Utilisation, report.Id)
 		for i := range cis {
+			if cis[i] == nil || cis[i].Cis == nil {
+				return 0, fmt.Errorf("cis[%d]: nil record or CIS", i)
+			}
 			km := &domain.UtilisationCodes{
 				IdOrderMarkUtilisation: int(report.Id),
 				SerialNumber:           cis[i].Serial,
