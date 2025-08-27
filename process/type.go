@@ -18,6 +18,7 @@ type process struct {
 	Koroba             map[string][]string
 	Palet              map[string]map[string]string
 	KM                 map[string]*utility.CisInfo
+	KMErrors           []string
 	arrKM              []string
 	ListKoroba         [][]string
 	ListPalet          [][]string
