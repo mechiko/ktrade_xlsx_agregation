@@ -70,7 +70,6 @@ func (z *DbZnak) writeUtilisation(tx db.Session, cis []*domain.Record, model *re
 	if err := tx.Collection("order_mark_utilisation").InsertReturning(report); err != nil {
 		return 0, err
 	} else {
-		// model.Utilisation = append(model.Utilisation, report.Id)
 		for i := range cis {
 			if cis[i] == nil || cis[i].Cis == nil {
 				return 0, fmt.Errorf("cis[%d]: nil record or CIS", i)
