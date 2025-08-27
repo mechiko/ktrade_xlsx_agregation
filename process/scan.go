@@ -10,6 +10,7 @@ import (
 )
 
 func (p *process) ScanRecords() (err error) {
+	p.KMErrors = make([]string, 0)
 	info := p.repo.Info(dbscan.TrueZnak)
 	if info == nil {
 		return fmt.Errorf("базы 4z не найдено")
@@ -28,8 +29,11 @@ func (p *process) ScanRecords() (err error) {
 			}
 		}
 	}()
-	if err := db.FindOrders(p.Records); err != nil {
-		return fmt.Errorf("error scan km %w", err)
+	if err := db.FindOrders(p.Records); len(err) != 0 {
+		for _, v := range err {
+			p.KMErrors = append(p.KMErrors, v.Error())
+		}
+		return fmt.Errorf("error scan km contains errors %d", len(err))
 	}
 	for _, rec := range p.Records {
 		ur := &UtilisationReport{

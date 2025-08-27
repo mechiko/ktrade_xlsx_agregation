@@ -3,7 +3,6 @@ package main
 import (
 	"agregat/checkdbg"
 	"agregat/domain"
-	"agregat/htmltmpl"
 	"agregat/process"
 	"agregat/reductor"
 	"agregat/repo"
@@ -12,8 +11,6 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"path/filepath"
-	"strings"
 
 	"github.com/mechiko/dbscan"
 	"github.com/mechiko/utility"
@@ -93,10 +90,20 @@ func main() {
 		errMessageExit("ошибка чтения файла", err.Error())
 	}
 
+	outDir, err := utility.DialogSelectDir("")
+	if err != nil {
+		outDir = ""
+	}
+
 	// поиск заказов по маркам для отчетов нанесения
 	err = proc.ScanRecords()
 	if err != nil {
 		loger.Errorf("ошибка ScanRecords %v", err)
+		fileReport, errHtml := proc.ErrorHtml(outDir)
+		if errHtml != nil {
+			errMessageExit("ошибка формирования отчета", errHtml.Error())
+		}
+		utility.OpenFileInShell(fileReport)
 		errMessageExit("ошибка ScanRecords", err.Error())
 	}
 
@@ -106,10 +113,6 @@ func main() {
 		loger.Errorf("ошибка ScanRecords %v", err)
 	}
 
-	outDir, err := utility.DialogSelectDir("")
-	if err != nil {
-		outDir = ""
-	}
 	// записываем короба и палеты раньше пусть будут
 	err = proc.Save(outDir)
 	if err != nil {
@@ -121,27 +124,12 @@ func main() {
 	err = proc.WriteUtilisation()
 	if err != nil {
 		errMessageExit("ошибка ScanRecords", err.Error())
-		// loger.Errorf("ошибка ScanRecords %v", err)
 	}
-
-	htmString, err := htmltmpl.NewTemplate().StringHTML(proc)
+	fileSuccessReport, err := proc.SuccessHtml(outDir)
 	if err != nil {
-		errMessageExit("ошибка ScanRecords", err.Error())
+		errMessageExit("ошибка формирования отчета", err.Error())
 	}
-	fileHtml := "report_" + strings.TrimSuffix(filepath.Base(fileXLSX), filepath.Ext(fileXLSX))
-	fileHtml = filepath.Join(outDir, fileHtml) + ".html"
-	file, err := os.Create(fileHtml)
-	if err != nil {
-		errMessageExit("Error creating file", err.Error())
-	}
-	defer file.Close() // Ensure the file is closed when the function exits
-
-	// Write the string content to the file
-	_, err = file.WriteString(string(htmString))
-	if err != nil {
-		errMessageExit("Error writing to file", err.Error())
-	}
-	utility.OpenFileInShell(fileHtml)
+	utility.OpenFileInShell(fileSuccessReport)
 
 }
 

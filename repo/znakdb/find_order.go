@@ -8,24 +8,32 @@ import (
 	"github.com/upper/db/v4"
 )
 
-func (z *DbZnak) FindOrders(in []*domain.Record) (err error) {
+func (z *DbZnak) FindOrders(in []*domain.Record) (errArray []error) {
+	errArray = make([]error, 0)
 	sess := z.dbSession
 	for i, rec := range in {
 		if rec == nil || rec.Cis == nil {
-			return fmt.Errorf("record[%d]: CIS is nil", i)
+			errArray = append(errArray, fmt.Errorf("record[%d]: CIS is nil", i))
+			continue
 		}
 		order := &domain.OrderMarkCodesSerialNumbers{}
-		res := sess.Collection("order_mark_codes_serial_numbers").Find("code", rec.Cis.Code).And("status = ?", "Напечатан")
+		res := sess.Collection("order_mark_codes_serial_numbers").Find("code", rec.Cis.Code)
+		// убрал условие чтобы увидеть реальный статус марки .And("status = ?", "Напечатан")
 		if err := res.One(order); err != nil {
 			if errors.Is(err, db.ErrNoMoreRows) {
-				return fmt.Errorf("%s: km %s with state Напечатан not found", modError, rec.Cis.Code)
+				errArray = append(errArray, fmt.Errorf("поиска КМ: [%s] в базе не дал результата %w", rec.Cis.Code))
+				continue
 			}
-			return fmt.Errorf("ошибка поиска КМ [%s] в базе %w", rec.Cis.Code, err)
+			errArray = append(errArray, fmt.Errorf("ошибка поиска КМ [%s] в базе %w", rec.Cis.Code, err))
+			continue
+		}
+		if order.Status != "Напечатан" {
+			errArray = append(errArray, fmt.Errorf("поиск КМ: [%s - %s] нужен - Напечатан", rec.Cis.Code, order.Status))
 		}
 		rec.Order = order.IdOrderMarkCodes
 		rec.Serial = order.SerialNumber
 	}
-	return nil
+	return errArray
 }
 
 // func (z *DbZnak) Order(id int64) (sl []*dbznak.OrderMarkCodes, err error) {

@@ -9,6 +9,8 @@ import (
 	"github.com/upper/db/v4"
 )
 
+const maxCountPerReportUtilisation = 300000
+
 // запись отчета нанесения
 func (z *DbZnak) WriteUtilisation(cises []*domain.Record, model *reductor.Model, prod, exp time.Time) (rid int64, err error) {
 	defer func() {
@@ -25,7 +27,7 @@ func (z *DbZnak) WriteUtilisation(cises []*domain.Record, model *reductor.Model,
 	err = sess.Tx(func(tx db.Session) error {
 		indexUtilisation := 0
 		for {
-			cis := nextRecords(cises, indexUtilisation, 30000)
+			cis := nextRecords(cises, indexUtilisation)
 			indexUtilisation++
 			if len(cis) == 0 {
 				// больше нет км
@@ -68,7 +70,7 @@ func (z *DbZnak) writeUtilisation(tx db.Session, cis []*domain.Record, model *re
 	if err := tx.Collection("order_mark_utilisation").InsertReturning(report); err != nil {
 		return 0, err
 	} else {
-		model.Utilisation = append(model.Utilisation, report.Id)
+		// model.Utilisation = append(model.Utilisation, report.Id)
 		for i := range cis {
 			if cis[i] == nil || cis[i].Cis == nil {
 				return 0, fmt.Errorf("cis[%d]: nil record or CIS", i)
@@ -82,6 +84,7 @@ func (z *DbZnak) writeUtilisation(tx db.Session, cis []*domain.Record, model *re
 			if _, err := tx.Collection("order_mark_utilisation_codes").Insert(km); err != nil {
 				return 0, err
 			}
+			fmt.Printf("write %d\n", i)
 		}
 	}
 	return report.Id, nil
@@ -89,12 +92,13 @@ func (z *DbZnak) writeUtilisation(tx db.Session, cis []*domain.Record, model *re
 
 // nextRecords returns a batch of records starting from startIndex
 // Returns empty slice when no more records are available
-func nextRecords(arr []*domain.Record, startIndex int, count int) []*domain.Record {
+func nextRecords(arr []*domain.Record, index int) []*domain.Record {
+	startIndex := index * maxCountPerReportUtilisation
 	if startIndex >= len(arr) {
 		return []*domain.Record{}
 	}
 
-	endIndex := startIndex + count
+	endIndex := startIndex + maxCountPerReportUtilisation
 	if endIndex > len(arr) {
 		endIndex = len(arr)
 	}
