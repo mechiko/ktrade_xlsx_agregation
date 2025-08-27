@@ -74,7 +74,7 @@ func (z *DbZnak) writeUtilisation(tx db.Session, cis []*domain.Record, model *re
 				return 0, fmt.Errorf("cis[%d]: nil record or CIS", i)
 			}
 			km := &domain.UtilisationCodes{
-				IdOrderMarkUtilisation: int(report.Id),
+				IdOrderMarkUtilisation: report.Id,
 				SerialNumber:           cis[i].Serial,
 				Code:                   cis[i].Cis.Code,
 				Status:                 "Нанесён",
@@ -87,20 +87,17 @@ func (z *DbZnak) writeUtilisation(tx db.Session, cis []*domain.Record, model *re
 	return report.Id, nil
 }
 
-// получить следующие км
-// i номер группы по count штук
-// если размер массива меньше count значит последний
-// елси размер массива 0 значит больше нет
-func nextRecords(arr []*domain.Record, i int, count int) (out []*domain.Record) {
-	lenCis := len(arr)
-	out = make([]*domain.Record, 0)
-	first := i * count
-	for i := 0; i < count; i++ {
-		index := i + first
-		if (index + 1) > lenCis {
-			return out
-		}
-		out = append(out, arr[index])
+// nextRecords returns a batch of records starting from startIndex
+// Returns empty slice when no more records are available
+func nextRecords(arr []*domain.Record, startIndex int, count int) []*domain.Record {
+	if startIndex >= len(arr) {
+		return []*domain.Record{}
 	}
-	return out
+
+	endIndex := startIndex + count
+	if endIndex > len(arr) {
+		endIndex = len(arr)
+	}
+
+	return arr[startIndex:endIndex]
 }

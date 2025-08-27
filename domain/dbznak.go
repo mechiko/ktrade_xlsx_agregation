@@ -23,7 +23,7 @@ type Utilisation struct {
 
 type UtilisationCodes struct {
 	Id                     int64  `db:"id,omitempty"`
-	IdOrderMarkUtilisation int    `db:"id_order_mark_utilisation"`
+	IdOrderMarkUtilisation int64  `db:"id_order_mark_utilisation"`
 	SerialNumber           string `db:"serial_number"`
 	Code                   string `db:"code"`
 	Status                 string `db:"status"`
