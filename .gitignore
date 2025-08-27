@@ -149,11 +149,8 @@ coverage*.out
 in/**/*.xlsx
 in/**/*.xls
 in/**/*.csv
-in/**/*.html
 out/**/*.xlsx
 out/**/*.xls
 out/**/*.csv
-out/**/*.html
 cmd/*.csv
-cmd/*.{xls,xlsx}
 
