@@ -13,6 +13,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/mechiko/dbscan"
 	"github.com/mechiko/utility"
@@ -34,7 +35,7 @@ func init() {
 
 func main() {
 	var logsOutConfig = map[string][]string{
-		"logger": {"stdout", "agregat.log"},
+		"logger": {"stdout"},
 	}
 	zl, err := zaplog.New(logsOutConfig, true)
 	if err != nil {
@@ -92,6 +93,13 @@ func main() {
 		errMessageExit("ошибка чтения файла", err.Error())
 	}
 
+	// поиск заказов по маркам для отчетов нанесения
+	err = proc.ScanRecords()
+	if err != nil {
+		loger.Errorf("ошибка ScanRecords %v", err)
+		errMessageExit("ошибка ScanRecords", err.Error())
+	}
+
 	err = proc.ScanPalet()
 	if err != nil {
 		// errMessageExit("ошибка ScanRecords", err.Error())
@@ -109,12 +117,6 @@ func main() {
 		loger.Errorf("ошибка ScanRecords %v", err)
 	}
 
-	// поиск заказов по маркам для отчетов нанесения
-	err = proc.ScanRecords()
-	if err != nil {
-		// errMessageExit("ошибка ScanRecords", err.Error())
-		loger.Errorf("ошибка ScanRecords %v", err)
-	}
 	// запись отчетов нанесения в БД
 	err = proc.WriteUtilisation()
 	if err != nil {
@@ -126,8 +128,8 @@ func main() {
 	if err != nil {
 		errMessageExit("ошибка ScanRecords", err.Error())
 	}
-	fileHtml := "report_" + utility.String(10)
-	fileHtml = filepath.Join("out", fileHtml) + ".html"
+	fileHtml := "report_" + strings.TrimSuffix(filepath.Base(fileXLSX), filepath.Ext(fileXLSX))
+	fileHtml = filepath.Join(outDir, fileHtml) + ".html"
 	file, err := os.Create(fileHtml)
 	if err != nil {
 		errMessageExit("Error creating file", err.Error())

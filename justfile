@@ -21,6 +21,6 @@ win64:
     go mod tidy -go 1.24 -v
     if(-Not $?) { exit }
     Remove-Item .\.dist\{{exe_name}}.exe, .\.dist\{{exe_name}}_64.exe 2>$null
-    go build -ldflags="{{ld_flags}}" -o ./.dist/{{exe_name}}_64.exe ./cmd
+    go build -ldflags="{{ld_flags}}" -o ./.dist/{{exe_name}}_64.exe .
     if(-Not $?) { exit }
     upx --force-overwrite -o ./.dist/{{exe_name}}.exe ./.dist/{{exe_name}}_64.exe
