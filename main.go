@@ -98,8 +98,12 @@ func main() {
 		loger.Errorf("ошибка ScanRecords %v", err)
 	}
 
+	outDir, err := utility.DialogSelectDir("")
+	if err != nil {
+		outDir = ""
+	}
 	// записываем короба и палеты раньше пусть будут
-	err = proc.Save("out")
+	err = proc.Save(outDir)
 	if err != nil {
 		// errMessageExit("ошибка ScanRecords", err.Error())
 		loger.Errorf("ошибка ScanRecords %v", err)
