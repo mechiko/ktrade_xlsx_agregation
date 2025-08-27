@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Registry>
+{{- range $box, $marks := $.Boxes }}
+  <Boxes>
+    <Box>
+      <Barcode>{{ $box }}</Barcode>
+      <MarkCodes>
+{{- range $i, $mark := $marks }}
+        <Code>{{ $mark.Mark }}</Code>
+{{- end }}
+      </MarkCodes>
+    </Box>
+  </Boxes>
+{{- end }}
+</Registry>

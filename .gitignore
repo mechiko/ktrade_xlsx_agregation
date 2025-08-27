@@ -146,12 +146,11 @@ output/
 coverage*.out
 *.coverprofile
 
-
-tmp/**/*.csv
-tmp/**/*.{xls,xlsx}
+in/**/*.xlsx
+in/**/*.xls
 in/**/*.csv
-out/**/*.{xls,xlsx}
-out/**/*.{htm,html}
-cmd/**/*.csv
-cmd/**/*.{xls,xlsx}
-cmd/**/*.{htm,html}
+out/**/*.xlsx
+out/**/*.xls
+out/**/*.csv
+cmd/*.csv
+
