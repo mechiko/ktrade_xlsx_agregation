@@ -12,24 +12,25 @@ import (
 // after Self() must be SelfClose() or deadlock
 func (r *Repository) Lock(t dbscan.DbInfoType) (domain.RepoDB, error) {
 	r.logger.Infof("repo Lock %v", t)
+	info := r.dbs.Info(t)
+	if info == nil {
+		return nil, nil
+	}
 	mu, ok := r.dbMutex[t]
 	if ok {
 		mu.mutex.Lock()
 	} else {
 		return nil, fmt.Errorf("repo lock not present mutex %v", t)
 	}
-	info := r.dbs.Info(t)
-	if info != nil {
-		switch t {
-		case dbscan.Config:
-			return configdb.New(r.logger, info, t)
-		case dbscan.TrueZnak:
-			return znakdb.New(info, t)
-		default:
-			return nil, fmt.Errorf("repo lock not present type mutex %v", t)
-		}
+	switch t {
+	case dbscan.Config:
+		return configdb.New(r.logger, info, t)
+	case dbscan.TrueZnak:
+		return znakdb.New(info, t)
+	default:
+		mu.mutex.Unlock()
+		return nil, fmt.Errorf("repo lock not present type mutex %v", t)
 	}
-	return nil, nil
 }
 
 func (r *Repository) Unlock(t dbscan.DbInfoType) error {

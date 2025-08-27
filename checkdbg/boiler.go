@@ -13,6 +13,8 @@ func (c *Checks) TestDbConfigContact() error {
 		return fmt.Errorf("%w", err)
 	}
 	if db != nil {
+		// выполняются в обратном порядке
+		// поэтому анлок должен быть последним выполненным
 		defer c.repo.Unlock(dbscan.Config)
 		defer db.Close()
 	}
