@@ -129,8 +129,11 @@
 <div style="text-align: center; font-size: 10pt; margin-top: 6px;">сформировано {{len $.Koroba}} коробок</div>
 <div style="text-align: center; font-size: 10pt; margin-top: 6px;">сформировано {{len $.Palet}} палет</div>
 <div style="margin-top: 6px;">
-{{range $key, $ur := $.Palet }}
-<div style="text-align: center;font-size: 10pt;margin-top: 6px;padding-left: 10px;">{{$key}}</div>
+{{range $date, $listpalet := $.PaletByDateProduce }}
+<div style="text-align: center;font-size: 10pt;margin-top: 6px;padding-left: 10px;">Произведено: {{$date}}</div>
+{{range $key, $palet := $listpalet }}
+<div style="text-align: center;font-size: 10pt;margin-top: 6px;padding-left: 10px;">{{$palet}}</div>
+{{end}}
 {{end}}
 </div>
 </page>
