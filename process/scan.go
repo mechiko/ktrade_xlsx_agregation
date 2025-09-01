@@ -60,13 +60,13 @@ func (p *process) ScanPalet() (err error) {
 		} else {
 			return fmt.Errorf("double KM cis %s %d", cis, iRec)
 		}
-		p.KM[rec.Cis.Cis] = rec.Cis
+		p.KM[cis] = rec.Cis
 		p.arrKM = append(p.arrKM, rec.Cis.Code)
 		if _, ok := p.Koroba[rec.Korob]; !ok {
 			p.Koroba[rec.Korob] = make([]string, 0)
 			p.KorobaKeys = append(p.KorobaKeys, rec.Korob)
 		}
-		p.Koroba[rec.Korob] = append(p.Koroba[rec.Korob], rec.Cis.Cis)
+		p.Koroba[rec.Korob] = append(p.Koroba[rec.Korob], cis)
 		if _, ok := p.Palet[rec.Palet]; !ok {
 			p.Palet[rec.Palet] = make(map[string]string)
 		}
@@ -127,11 +127,11 @@ func (p *process) findKorob(korob string) (date string, err error) {
 	if !ok {
 		return "", fmt.Errorf("find korob date нет такого короба %s", korob)
 	}
-	if recs != nil || len(recs) > 0 {
-		recIndex := recs[0]
-		rec, ok := p.RecordsMap[recIndex]
+	if len(recs) > 0 {
+		cis := strings.TrimSpace(recs[0])
+		rec, ok := p.RecordsMap[cis]
 		if !ok {
-			return "", fmt.Errorf("find korob date нет такой KM %s", recIndex)
+			return "", fmt.Errorf("find korob date нет такой KM %s", cis)
 		}
 		date = rec.Produced.Format("02.01.2006")
 		return date, nil

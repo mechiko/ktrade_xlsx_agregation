@@ -5,6 +5,7 @@ shebang := 'pwsh.exe'
 exe_name := "agregatkrt"
 mod_name := "agregat"
 ld_flags :="-s -w -X main.Mode=production"
+dist := ".dist"
 
 default:
   just --list
@@ -20,7 +21,7 @@ win64:
     }
     go mod tidy -go 1.24 -v
     if(-Not $?) { exit }
-    Remove-Item .\.dist\{{exe_name}}.exe, .\.dist\{{exe_name}}_64.exe 2>$null
-    go build -ldflags="{{ld_flags}}" -o ./.dist/{{exe_name}}_64.exe .
+    Remove-Item {{dist}}\{{exe_name}}.exe, {{dist}}\{{exe_name}}_64.exe 2>$null
+    go build -ldflags="{{ld_flags}}" -o {{dist}}\{{exe_name}}_64.exe ./cmd
     if(-Not $?) { exit }
-    upx --force-overwrite -o ./.dist/{{exe_name}}.exe ./.dist/{{exe_name}}_64.exe
+    upx --force-overwrite -o {{dist}}\{{exe_name}}.exe {{dist}}\{{exe_name}}_64.exe
