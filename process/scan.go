@@ -43,11 +43,12 @@ func (p *process) ScanRecords() (err error) {
 		return fmt.Errorf("error scan km contains errors %d", len(err))
 	}
 	for _, rec := range p.Records {
-		plt, err := dbZnak.FindPallet(rec.Palet)
-		if !errors.Is(err, db.ErrNoMoreRows) {
-			return fmt.Errorf("find palet %s error %w", rec.Palet, err)
+		pal := strings.TrimSpace(rec.Palet)
+		plt, err := dbZnak.FindPallet(pal)
+		if err != nil && !errors.Is(err, db.ErrNoMoreRows) {
+			return fmt.Errorf("find palet %s: %w", pal, err)
 		}
-		if plt != nil {
+		if err == nil && plt != nil {
 			return fmt.Errorf("palet is present %s created %s id %v", plt["unit_serial_number"], plt["create_date"], plt["id"])
 		}
 		ur := &UtilisationReport{
@@ -79,23 +80,6 @@ func (p *process) ScanPalet() (err error) {
 			return fmt.Errorf("double KM cis %s %d", cis, iRec)
 		}
 		p.KM[cis] = rec.Cis
-		p.arrKM = append(p.arrKM, code)
-		if _, ok := p.Koroba[korob]; !ok {
-			p.Koroba[korob] = &domain.Korob{
-				KITU:     korob,
-				GTIN:     gtin,
-				Km:       make([]string, 0),
-				Produced: produced,
-			}
-			p.KorobaKeys = append(p.KorobaKeys, korob)
-		}
-		if p.Koroba[korob].GTIN != gtin {
-			return fmt.Errorf("korob %s: GTIN mismatch (have %s, got %s)", korob, p.Koroba[korob].GTIN, gtin)
-		}
-		if p.Koroba[korob].Produced != produced {
-			return fmt.Errorf("korob %s: produced mismatch (have %s, got %s)", korob, p.Koroba[korob].Produced, produced)
-		}
-		p.Koroba[korob].Km = append(p.Koroba[korob].Km, cis)
 		if _, ok := p.Palet[palet]; !ok {
 			p.Palet[palet] = &domain.Palet{
 				KITU:     palet,
@@ -115,7 +99,24 @@ func (p *process) ScanPalet() (err error) {
 		if p.Palet[palet].Produced != produced {
 			return fmt.Errorf("palet %s: produced mismatch (have %s, got %s)", palet, p.Palet[palet].Produced, produced)
 		}
-		p.Palet[palet].Korobs = append(p.Palet[palet].Korobs, korob)
+		p.arrKM = append(p.arrKM, code)
+		if _, ok := p.Koroba[korob]; !ok {
+			p.Koroba[korob] = &domain.Korob{
+				KITU:     korob,
+				GTIN:     gtin,
+				Km:       make([]string, 0),
+				Produced: produced,
+			}
+			p.KorobaKeys = append(p.KorobaKeys, korob)
+			p.Palet[palet].Korobs = append(p.Palet[palet].Korobs, korob)
+		}
+		if p.Koroba[korob].GTIN != gtin {
+			return fmt.Errorf("korob %s: GTIN mismatch (have %s, got %s)", korob, p.Koroba[korob].GTIN, gtin)
+		}
+		if p.Koroba[korob].Produced != produced {
+			return fmt.Errorf("korob %s: produced mismatch (have %s, got %s)", korob, p.Koroba[korob].Produced, produced)
+		}
+		p.Koroba[korob].Km = append(p.Koroba[korob].Km, cis)
 	}
 	p.ListKoroba = make([][]string, 0)
 	keysKorob := make([]string, 0, len(p.Koroba))

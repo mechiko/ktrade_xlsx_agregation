@@ -20,11 +20,14 @@ var funcMapHtml = template.FuncMap{
 	},
 	"gtin": func(s string) string {
 		ar := strings.Split(s, ":")
-		return ar[0]
+		if len(ar) > 0 {
+			return ar[0]
+		}
+		return ""
 	},
 	"produced": func(s string) string {
 		ar := strings.Split(s, ":")
-		if len(ar) > 0 {
+		if len(ar) > 1 {
 			return ar[1]
 		}
 		return ""
