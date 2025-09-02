@@ -20,7 +20,7 @@ func (tt *templateString) SuccessHTML(model interface{}) (bts []byte, err error)
 
 	tmplName := "html"
 	// вызов шаблона в него передаем имя шаблона как имя файла шаблона
-	if result, err := tt.tmplMustText(tmplHtml, tmplName, model, nil); err != nil {
+	if result, err := tt.tmplHtml(tmplHtml, tmplName, model, nil); err != nil {
 		return bts, err
 	} else {
 		return result, err
@@ -36,7 +36,7 @@ func (tt *templateString) ErrorHTML(model interface{}) (bts []byte, err error) {
 
 	tmplName := "htmlError"
 	// вызов шаблона в него передаем имя шаблона как имя файла шаблона
-	if result, err := tt.tmplMustText(tmplErrorHtml, tmplName, model, nil); err != nil {
+	if result, err := tt.tmplHtml(tmplErrorHtml, tmplName, model, nil); err != nil {
 		return bts, err
 	} else {
 		return result, err

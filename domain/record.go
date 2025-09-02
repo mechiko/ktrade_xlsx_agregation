@@ -66,3 +66,17 @@ func parseDate(s string) (time.Time, error) {
 	}
 	return parsedTime, nil
 }
+
+type Korob struct {
+	KITU     string
+	GTIN     string
+	Km       []string
+	Produced string
+}
+
+type Palet struct {
+	KITU     string
+	GTIN     string
+	Korobs   []string
+	Produced string
+}

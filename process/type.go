@@ -16,8 +16,8 @@ type process struct {
 	File               string
 	Records            []*domain.Record
 	RecordsMap         map[string]*domain.Record
-	Koroba             map[string][]string
-	Palet              map[string]map[string]string
+	Koroba             map[string]*domain.Korob
+	Palet              map[string]*domain.Palet
 	PaletByDateProduce map[string][]string
 	KM                 map[string]*utility.CisInfo
 	KMErrors           []string
@@ -33,6 +33,7 @@ type process struct {
 	PaymentType        string
 	TemplateId         string
 	Utilisation        map[string]*UtilisationReport
+	Guide              map[string]*domain.ProductGuides
 }
 
 type UtilisationReport struct {
@@ -63,8 +64,8 @@ func New(file string, repo domain.Repo) (*process, error) {
 		repo:               repo,
 		File:               file,
 		NameFileWithoutExt: name,
-		Koroba:             make(map[string][]string),
-		Palet:              map[string]map[string]string{},
+		Koroba:             make(map[string]*domain.Korob),
+		Palet:              make(map[string]*domain.Palet),
 		KM:                 make(map[string]*utility.CisInfo),
 		arrKM:              make([]string, 0),
 		Records:            make([]*domain.Record, 0),
@@ -72,6 +73,5 @@ func New(file string, repo domain.Repo) (*process, error) {
 		Utilisation:        make(map[string]*UtilisationReport),
 		PaletByDateProduce: make(map[string][]string),
 	}
-
 	return p, nil
 }

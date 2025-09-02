@@ -3,11 +3,13 @@ package process
 import (
 	"agregat/domain"
 	"agregat/repo/znakdb"
+	"errors"
 	"fmt"
 	"slices"
 	"strings"
 
 	"github.com/mechiko/dbscan"
+	"github.com/upper/db/v4"
 )
 
 func (p *process) ScanRecords() (err error) {
@@ -16,12 +18,12 @@ func (p *process) ScanRecords() (err error) {
 	if info == nil {
 		return fmt.Errorf("базы 4z не найдено")
 	}
-	db, err := znakdb.New(info, dbscan.TrueZnak)
+	dbZnak, err := znakdb.New(info, dbscan.TrueZnak)
 	if err != nil {
 		return fmt.Errorf("open znak db: %w", err)
 	}
 	defer func() {
-		if cerr := db.Close(); cerr != nil {
+		if cerr := dbZnak.Close(); cerr != nil {
 			if err != nil {
 				// keep original op error and append close error
 				err = fmt.Errorf("%w; close error: %v", err, cerr)
@@ -30,13 +32,33 @@ func (p *process) ScanRecords() (err error) {
 			}
 		}
 	}()
-	if err := db.FindOrders(p.Records); len(err) != 0 {
+	p.Guide, err = dbZnak.Guide()
+	if err != nil {
+		return fmt.Errorf("error get guide %w", err)
+	}
+	if err := dbZnak.FindOrders(p.Records); len(err) != 0 {
 		for _, v := range err {
 			p.KMErrors = append(p.KMErrors, v.Error())
 		}
 		return fmt.Errorf("error scan km contains errors %d", len(err))
 	}
 	for _, rec := range p.Records {
+		pal := strings.TrimSpace(rec.Palet)
+		plt, err := dbZnak.FindPallet(pal)
+		if err != nil && !errors.Is(err, db.ErrNoMoreRows) {
+			return fmt.Errorf("find palet %s: %w", pal, err)
+		}
+		if err == nil && plt != nil {
+			return fmt.Errorf("palet is present %s created %s id %v", plt["unit_serial_number"], plt["create_date"], plt["id"])
+		}
+		kor := strings.TrimSpace(rec.Korob)
+		krb, err := dbZnak.FindPallet(kor)
+		if err != nil && !errors.Is(err, db.ErrNoMoreRows) {
+			return fmt.Errorf("find korob %s: %w", kor, err)
+		}
+		if err == nil && krb != nil {
+			return fmt.Errorf("korob is present %s created %s id %v", krb["unit_serial_number"], krb["create_date"], krb["id"])
+		}
 		ur := &UtilisationReport{
 			Order: rec.Order,
 			Prod:  rec.Produced,
@@ -55,22 +77,54 @@ func (p *process) ScanRecords() (err error) {
 func (p *process) ScanPalet() (err error) {
 	for iRec, rec := range p.Records {
 		cis := strings.TrimSpace(rec.Cis.Cis)
+		gtin := strings.TrimSpace(rec.Cis.Gtin)
+		code := strings.TrimSpace(rec.Cis.Code)
+		korob := strings.TrimSpace(rec.Korob)
+		palet := strings.TrimSpace(rec.Palet)
+		produced := rec.Produced.Format("02.01.2006")
 		if _, ok := p.RecordsMap[cis]; !ok {
 			p.RecordsMap[cis] = rec
 		} else {
 			return fmt.Errorf("double KM cis %s %d", cis, iRec)
 		}
 		p.KM[cis] = rec.Cis
-		p.arrKM = append(p.arrKM, rec.Cis.Code)
-		if _, ok := p.Koroba[rec.Korob]; !ok {
-			p.Koroba[rec.Korob] = make([]string, 0)
-			p.KorobaKeys = append(p.KorobaKeys, rec.Korob)
+		if _, ok := p.Palet[palet]; !ok {
+			p.Palet[palet] = &domain.Palet{
+				KITU:     palet,
+				GTIN:     gtin,
+				Korobs:   make([]string, 0),
+				Produced: produced,
+			}
+			orderKey := fmt.Sprintf("%s:%s", gtin, produced)
+			if _, ok := p.PaletByDateProduce[orderKey]; !ok {
+				p.PaletByDateProduce[orderKey] = make([]string, 0)
+			}
+			p.PaletByDateProduce[orderKey] = append(p.PaletByDateProduce[orderKey], palet)
 		}
-		p.Koroba[rec.Korob] = append(p.Koroba[rec.Korob], cis)
-		if _, ok := p.Palet[rec.Palet]; !ok {
-			p.Palet[rec.Palet] = make(map[string]string)
+		if p.Palet[palet].GTIN != gtin {
+			return fmt.Errorf("palet %s: GTIN mismatch (have %s, got %s)", palet, p.Palet[palet].GTIN, gtin)
 		}
-		p.Palet[rec.Palet][rec.Korob] = rec.Korob
+		if p.Palet[palet].Produced != produced {
+			return fmt.Errorf("palet %s: produced mismatch (have %s, got %s)", palet, p.Palet[palet].Produced, produced)
+		}
+		p.arrKM = append(p.arrKM, code)
+		if _, ok := p.Koroba[korob]; !ok {
+			p.Koroba[korob] = &domain.Korob{
+				KITU:     korob,
+				GTIN:     gtin,
+				Km:       make([]string, 0),
+				Produced: produced,
+			}
+			p.KorobaKeys = append(p.KorobaKeys, korob)
+			p.Palet[palet].Korobs = append(p.Palet[palet].Korobs, korob)
+		}
+		if p.Koroba[korob].GTIN != gtin {
+			return fmt.Errorf("korob %s: GTIN mismatch (have %s, got %s)", korob, p.Koroba[korob].GTIN, gtin)
+		}
+		if p.Koroba[korob].Produced != produced {
+			return fmt.Errorf("korob %s: produced mismatch (have %s, got %s)", korob, p.Koroba[korob].Produced, produced)
+		}
+		p.Koroba[korob].Km = append(p.Koroba[korob].Km, cis)
 	}
 	p.ListKoroba = make([][]string, 0)
 	keysKorob := make([]string, 0, len(p.Koroba))
@@ -79,7 +133,7 @@ func (p *process) ScanPalet() (err error) {
 	}
 	slices.Sort(keysKorob)
 	for _, key := range keysKorob {
-		for _, cis := range p.Koroba[key] {
+		for _, cis := range p.Koroba[key].Km {
 			r := []string{key, cis}
 			p.ListKoroba = append(p.ListKoroba, r)
 		}
@@ -91,8 +145,8 @@ func (p *process) ScanPalet() (err error) {
 	}
 	slices.Sort(keysPalet)
 	for _, key := range keysPalet {
-		keys := make([]string, 0, len(p.Palet[key]))
-		for k := range p.Palet[key] {
+		keys := make([]string, 0, len(p.Palet[key].Korobs))
+		for _, k := range p.Palet[key].Korobs {
 			keys = append(keys, k)
 		}
 		slices.Sort(keys)
@@ -101,40 +155,5 @@ func (p *process) ScanPalet() (err error) {
 			p.ListPalet = append(p.ListPalet, r)
 		}
 	}
-
-	for _, key := range keysPalet {
-		for kk := range p.Palet[key] {
-			if kk != "" {
-				date, err := p.findKorob(kk)
-				if err != nil {
-					return fmt.Errorf("scanpalet order palet by date %w", err)
-				}
-				if _, ok := p.PaletByDateProduce[date]; !ok {
-					p.PaletByDateProduce[date] = make([]string, 0)
-				}
-				p.PaletByDateProduce[date] = append(p.PaletByDateProduce[date], key)
-			} else {
-				return fmt.Errorf("scanpalet order palet by date empty korob in palet %s", key)
-			}
-			break
-		}
-	}
 	return nil
-}
-
-func (p *process) findKorob(korob string) (date string, err error) {
-	recs, ok := p.Koroba[korob]
-	if !ok {
-		return "", fmt.Errorf("find korob date нет такого короба %s", korob)
-	}
-	if len(recs) > 0 {
-		cis := strings.TrimSpace(recs[0])
-		rec, ok := p.RecordsMap[cis]
-		if !ok {
-			return "", fmt.Errorf("find korob date нет такой KM %s", cis)
-		}
-		date = rec.Produced.Format("02.01.2006")
-		return date, nil
-	}
-	return "", fmt.Errorf("find korob date нет марок в коробе %s", korob)
 }
