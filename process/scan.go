@@ -51,6 +51,14 @@ func (p *process) ScanRecords() (err error) {
 		if err == nil && plt != nil {
 			return fmt.Errorf("palet is present %s created %s id %v", plt["unit_serial_number"], plt["create_date"], plt["id"])
 		}
+		kor := strings.TrimSpace(rec.Korob)
+		krb, err := dbZnak.FindPallet(kor)
+		if err != nil && !errors.Is(err, db.ErrNoMoreRows) {
+			return fmt.Errorf("find korob %s: %w", kor, err)
+		}
+		if err == nil && krb != nil {
+			return fmt.Errorf("korob is present %s created %s id %v", krb["unit_serial_number"], krb["create_date"], krb["id"])
+		}
 		ur := &UtilisationReport{
 			Order: rec.Order,
 			Prod:  rec.Produced,
