@@ -55,22 +55,53 @@ func (p *process) ScanRecords() (err error) {
 func (p *process) ScanPalet() (err error) {
 	for iRec, rec := range p.Records {
 		cis := strings.TrimSpace(rec.Cis.Cis)
+		gtin := strings.TrimSpace(rec.Cis.Gtin)
+		code := strings.TrimSpace(rec.Cis.Code)
+		korob := strings.TrimSpace(rec.Korob)
+		palet := strings.TrimSpace(rec.Palet)
+		produced := rec.Produced.Format("02.01.2006")
 		if _, ok := p.RecordsMap[cis]; !ok {
 			p.RecordsMap[cis] = rec
 		} else {
 			return fmt.Errorf("double KM cis %s %d", cis, iRec)
 		}
 		p.KM[cis] = rec.Cis
-		p.arrKM = append(p.arrKM, rec.Cis.Code)
-		if _, ok := p.Koroba[rec.Korob]; !ok {
-			p.Koroba[rec.Korob] = make([]string, 0)
-			p.KorobaKeys = append(p.KorobaKeys, rec.Korob)
+		p.arrKM = append(p.arrKM, code)
+		if _, ok := p.Koroba[korob]; !ok {
+			p.Koroba[rec.Korob] = &domain.Korob{
+				KITU:     korob,
+				GTIN:     gtin,
+				Km:       make([]string, 0),
+				Produced: produced,
+			}
+			p.KorobaKeys = append(p.KorobaKeys, korob)
 		}
-		p.Koroba[rec.Korob] = append(p.Koroba[rec.Korob], cis)
+		if p.Koroba[korob].GTIN != gtin {
+			return fmt.Errorf("gtin cis %s not equal korob %s", p.Koroba[korob].GTIN, gtin)
+		}
+		if p.Koroba[korob].Produced != produced {
+			return fmt.Errorf("produced cis %s not equal korob %s", p.Koroba[korob].Produced, produced)
+		}
+		p.Koroba[rec.Korob].Km = append(p.Koroba[rec.Korob].Km, cis)
 		if _, ok := p.Palet[rec.Palet]; !ok {
-			p.Palet[rec.Palet] = make(map[string]string)
+			p.Palet[palet] = &domain.Palet{
+				KITU:     palet,
+				GTIN:     gtin,
+				Korobs:   make([]string, 0),
+				Produced: produced,
+			}
+			if _, ok := p.PaletByDateProduce[produced]; !ok {
+				p.PaletByDateProduce[produced] = make([]string, 0)
+			}
+			p.PaletByDateProduce[produced] = append(p.PaletByDateProduce[produced], palet)
 		}
-		p.Palet[rec.Palet][rec.Korob] = rec.Korob
+		if p.Palet[palet].GTIN != gtin {
+			return fmt.Errorf("gtin korob %s not equal palet %s", p.Koroba[korob].GTIN, gtin)
+		}
+		if p.Palet[palet].Produced != produced {
+			return fmt.Errorf("produced korob %s not equal palet %s", p.Koroba[korob].Produced, produced)
+		}
+		p.Palet[palet].Korobs = append(p.Palet[palet].Korobs, korob)
 	}
 	p.ListKoroba = make([][]string, 0)
 	keysKorob := make([]string, 0, len(p.Koroba))
@@ -79,7 +110,7 @@ func (p *process) ScanPalet() (err error) {
 	}
 	slices.Sort(keysKorob)
 	for _, key := range keysKorob {
-		for _, cis := range p.Koroba[key] {
+		for _, cis := range p.Koroba[key].Km {
 			r := []string{key, cis}
 			p.ListKoroba = append(p.ListKoroba, r)
 		}
@@ -91,8 +122,8 @@ func (p *process) ScanPalet() (err error) {
 	}
 	slices.Sort(keysPalet)
 	for _, key := range keysPalet {
-		keys := make([]string, 0, len(p.Palet[key]))
-		for k := range p.Palet[key] {
+		keys := make([]string, 0, len(p.Palet[key].Korobs))
+		for _, k := range p.Palet[key].Korobs {
 			keys = append(keys, k)
 		}
 		slices.Sort(keys)
@@ -101,40 +132,5 @@ func (p *process) ScanPalet() (err error) {
 			p.ListPalet = append(p.ListPalet, r)
 		}
 	}
-
-	for _, key := range keysPalet {
-		for kk := range p.Palet[key] {
-			if kk != "" {
-				date, err := p.findKorob(kk)
-				if err != nil {
-					return fmt.Errorf("scanpalet order palet by date %w", err)
-				}
-				if _, ok := p.PaletByDateProduce[date]; !ok {
-					p.PaletByDateProduce[date] = make([]string, 0)
-				}
-				p.PaletByDateProduce[date] = append(p.PaletByDateProduce[date], key)
-			} else {
-				return fmt.Errorf("scanpalet order palet by date empty korob in palet %s", key)
-			}
-			break
-		}
-	}
 	return nil
-}
-
-func (p *process) findKorob(korob string) (date string, err error) {
-	recs, ok := p.Koroba[korob]
-	if !ok {
-		return "", fmt.Errorf("find korob date нет такого короба %s", korob)
-	}
-	if len(recs) > 0 {
-		cis := strings.TrimSpace(recs[0])
-		rec, ok := p.RecordsMap[cis]
-		if !ok {
-			return "", fmt.Errorf("find korob date нет такой KM %s", cis)
-		}
-		date = rec.Produced.Format("02.01.2006")
-		return date, nil
-	}
-	return "", fmt.Errorf("find korob date нет марок в коробе %s", korob)
 }
