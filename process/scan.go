@@ -5,6 +5,7 @@ import (
 	"agregat/repo/znakdb"
 	"fmt"
 	"slices"
+	"strings"
 
 	"github.com/mechiko/dbscan"
 )
@@ -52,14 +53,20 @@ func (p *process) ScanRecords() (err error) {
 }
 
 func (p *process) ScanPalet() (err error) {
-	for _, rec := range p.Records {
-		p.KM[rec.Cis.Cis] = rec.Cis
+	for iRec, rec := range p.Records {
+		cis := strings.TrimSpace(rec.Cis.Cis)
+		if _, ok := p.RecordsMap[cis]; !ok {
+			p.RecordsMap[cis] = rec
+		} else {
+			return fmt.Errorf("double KM cis %s %d", cis, iRec)
+		}
+		p.KM[cis] = rec.Cis
 		p.arrKM = append(p.arrKM, rec.Cis.Code)
 		if _, ok := p.Koroba[rec.Korob]; !ok {
 			p.Koroba[rec.Korob] = make([]string, 0)
 			p.KorobaKeys = append(p.KorobaKeys, rec.Korob)
 		}
-		p.Koroba[rec.Korob] = append(p.Koroba[rec.Korob], rec.Cis.Cis)
+		p.Koroba[rec.Korob] = append(p.Koroba[rec.Korob], cis)
 		if _, ok := p.Palet[rec.Palet]; !ok {
 			p.Palet[rec.Palet] = make(map[string]string)
 		}
@@ -94,28 +101,40 @@ func (p *process) ScanPalet() (err error) {
 			p.ListPalet = append(p.ListPalet, r)
 		}
 	}
+
+	for _, key := range keysPalet {
+		for kk := range p.Palet[key] {
+			if kk != "" {
+				date, err := p.findKorob(kk)
+				if err != nil {
+					return fmt.Errorf("scanpalet order palet by date %w", err)
+				}
+				if _, ok := p.PaletByDateProduce[date]; !ok {
+					p.PaletByDateProduce[date] = make([]string, 0)
+				}
+				p.PaletByDateProduce[date] = append(p.PaletByDateProduce[date], key)
+			} else {
+				return fmt.Errorf("scanpalet order palet by date empty korob in palet %s", key)
+			}
+			break
+		}
+	}
 	return nil
 }
 
-// func readStringArray(filePath string) ([][]string, error) {
-// 	f, err := os.Open(filePath)
-// 	if err != nil {
-// 		return nil, fmt.Errorf("ошибка открытия файла %w", err)
-// 	}
-// 	defer f.Close()
-
-// 	arr := make([][]string, 0)
-// 	scanner := bufio.NewScanner(f)
-// 	// optionally, resize scanner's capacity for lines over 64K, see next example
-// 	for scanner.Scan() {
-// 		txt := strings.Split(scanner.Text(), "\t")
-// 		if len(txt) != 3 {
-// 			return nil, fmt.Errorf("полей в каждой строке файла должно быть три")
-// 		}
-// 		arr = append(arr, txt)
-// 	}
-// 	if err := scanner.Err(); err != nil {
-// 		return nil, fmt.Errorf("ошибка сканера %w", err)
-// 	}
-// 	return arr, nil
-// }
+func (p *process) findKorob(korob string) (date string, err error) {
+	recs, ok := p.Koroba[korob]
+	if !ok {
+		return "", fmt.Errorf("find korob date нет такого короба %s", korob)
+	}
+	if len(recs) > 0 {
+		cis := strings.TrimSpace(recs[0])
+		rec, ok := p.RecordsMap[cis]
+		if !ok {
+			return "", fmt.Errorf("find korob date нет такой KM %s", cis)
+		}
+		date = rec.Produced.Format("02.01.2006")
+		return date, nil
+	}
+	return "", fmt.Errorf("find korob date нет марок в коробе %s", korob)
+}
