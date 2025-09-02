@@ -6,23 +6,19 @@ import (
 	"html/template"
 )
 
-func (tt templateString) tmplMustText(tmpl string, tmplName string, data interface{}, f template.FuncMap) (ss []byte, err error) {
-	defer func() {
-		if r := recover(); r != nil {
-			ss = nil
-			err = fmt.Errorf("panic templateString %v", r)
-		}
-	}()
-
+func (tt templateString) tmplHtml(tmpl string, tmplName string, data interface{}, f template.FuncMap) (ss []byte, err error) {
 	var buf bytes.Buffer
-	fncMap := funcMapText
+	fncMap := funcMapHtml
 	if f != nil {
 		fncMap = f
 	}
-	t := template.Must(template.New(tmplName).Funcs(fncMap).Parse(tmpl))
+	t, err := template.New(tmplName).Funcs(fncMap).Parse(tmpl)
+	if err != nil {
+		return nil, fmt.Errorf("tmplHtml parse error %w", err)
+	}
 	err = t.ExecuteTemplate(&buf, tmplName, data)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("tmplHtml execute error %w", err)
 	}
 	return buf.Bytes(), nil
 }

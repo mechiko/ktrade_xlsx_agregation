@@ -67,3 +67,23 @@ type OrderMarkCodesSerialNumbers struct {
 	BlockId          string `db:"block_id"`
 	Status           string `db:"status"`
 }
+
+type ProductGuides struct {
+	Id                 int64  `db:"id"`
+	ProductName        string `db:"product_name"`
+	ProductCapacity    string `db:"product_capacity"`
+	ProductAlcCode     string `db:"product_alc_code"`
+	ProductGtin        string `db:"product_gtin"`
+	ProductTemplate    string `db:"product_template"`
+	ProductShelfLife   string `db:"product_shelf_life"`
+	DeclarationNumber  string `db:"declaration_number"`
+	DeclarationDate    string `db:"declaration_date"`
+	ProductRegId       string `db:"product_reg_id"`
+	CertificateNumber  string `db:"certificate_number"`
+	CertificateDate    string `db:"certificate_date"`
+	StateNumber        string `db:"state_number"`
+	StateDate          string `db:"state_date"`
+	TnVed              string `db:"tn_ved"`
+	WaterLicenseNumber string `db:"water_license_number"`
+	WaterLicenseDate   string `db:"water_license_date"`
+}

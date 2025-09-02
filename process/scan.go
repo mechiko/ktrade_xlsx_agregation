@@ -3,11 +3,13 @@ package process
 import (
 	"agregat/domain"
 	"agregat/repo/znakdb"
+	"errors"
 	"fmt"
 	"slices"
 	"strings"
 
 	"github.com/mechiko/dbscan"
+	"github.com/upper/db/v4"
 )
 
 func (p *process) ScanRecords() (err error) {
@@ -16,12 +18,12 @@ func (p *process) ScanRecords() (err error) {
 	if info == nil {
 		return fmt.Errorf("базы 4z не найдено")
 	}
-	db, err := znakdb.New(info, dbscan.TrueZnak)
+	dbZnak, err := znakdb.New(info, dbscan.TrueZnak)
 	if err != nil {
 		return fmt.Errorf("open znak db: %w", err)
 	}
 	defer func() {
-		if cerr := db.Close(); cerr != nil {
+		if cerr := dbZnak.Close(); cerr != nil {
 			if err != nil {
 				// keep original op error and append close error
 				err = fmt.Errorf("%w; close error: %v", err, cerr)
@@ -30,13 +32,24 @@ func (p *process) ScanRecords() (err error) {
 			}
 		}
 	}()
-	if err := db.FindOrders(p.Records); len(err) != 0 {
+	p.Guide, err = dbZnak.Guide()
+	if err != nil {
+		return fmt.Errorf("error get guide %w", err)
+	}
+	if err := dbZnak.FindOrders(p.Records); len(err) != 0 {
 		for _, v := range err {
 			p.KMErrors = append(p.KMErrors, v.Error())
 		}
 		return fmt.Errorf("error scan km contains errors %d", len(err))
 	}
 	for _, rec := range p.Records {
+		plt, err := dbZnak.FindPallet(rec.Palet)
+		if !errors.Is(err, db.ErrNoMoreRows) {
+			return fmt.Errorf("find palet %s error %w", rec.Palet, err)
+		}
+		if plt != nil {
+			return fmt.Errorf("palet is present %s created %s id %v", plt["unit_serial_number"], plt["create_date"], plt["id"])
+		}
 		ur := &UtilisationReport{
 			Order: rec.Order,
 			Prod:  rec.Produced,
@@ -68,7 +81,7 @@ func (p *process) ScanPalet() (err error) {
 		p.KM[cis] = rec.Cis
 		p.arrKM = append(p.arrKM, code)
 		if _, ok := p.Koroba[korob]; !ok {
-			p.Koroba[rec.Korob] = &domain.Korob{
+			p.Koroba[korob] = &domain.Korob{
 				KITU:     korob,
 				GTIN:     gtin,
 				Km:       make([]string, 0),
@@ -77,29 +90,30 @@ func (p *process) ScanPalet() (err error) {
 			p.KorobaKeys = append(p.KorobaKeys, korob)
 		}
 		if p.Koroba[korob].GTIN != gtin {
-			return fmt.Errorf("gtin cis %s not equal korob %s", p.Koroba[korob].GTIN, gtin)
+			return fmt.Errorf("korob %s: GTIN mismatch (have %s, got %s)", korob, p.Koroba[korob].GTIN, gtin)
 		}
 		if p.Koroba[korob].Produced != produced {
-			return fmt.Errorf("produced cis %s not equal korob %s", p.Koroba[korob].Produced, produced)
+			return fmt.Errorf("korob %s: produced mismatch (have %s, got %s)", korob, p.Koroba[korob].Produced, produced)
 		}
-		p.Koroba[rec.Korob].Km = append(p.Koroba[rec.Korob].Km, cis)
-		if _, ok := p.Palet[rec.Palet]; !ok {
+		p.Koroba[korob].Km = append(p.Koroba[korob].Km, cis)
+		if _, ok := p.Palet[palet]; !ok {
 			p.Palet[palet] = &domain.Palet{
 				KITU:     palet,
 				GTIN:     gtin,
 				Korobs:   make([]string, 0),
 				Produced: produced,
 			}
-			if _, ok := p.PaletByDateProduce[produced]; !ok {
-				p.PaletByDateProduce[produced] = make([]string, 0)
+			orderKey := fmt.Sprintf("%s:%s", gtin, produced)
+			if _, ok := p.PaletByDateProduce[orderKey]; !ok {
+				p.PaletByDateProduce[orderKey] = make([]string, 0)
 			}
-			p.PaletByDateProduce[produced] = append(p.PaletByDateProduce[produced], palet)
+			p.PaletByDateProduce[orderKey] = append(p.PaletByDateProduce[orderKey], palet)
 		}
 		if p.Palet[palet].GTIN != gtin {
-			return fmt.Errorf("gtin korob %s not equal palet %s", p.Koroba[korob].GTIN, gtin)
+			return fmt.Errorf("palet %s: GTIN mismatch (have %s, got %s)", palet, p.Palet[palet].GTIN, gtin)
 		}
 		if p.Palet[palet].Produced != produced {
-			return fmt.Errorf("produced korob %s not equal palet %s", p.Koroba[korob].Produced, produced)
+			return fmt.Errorf("palet %s: produced mismatch (have %s, got %s)", palet, p.Palet[palet].Produced, produced)
 		}
 		p.Palet[palet].Korobs = append(p.Palet[palet].Korobs, korob)
 	}

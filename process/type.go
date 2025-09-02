@@ -33,6 +33,7 @@ type process struct {
 	PaymentType        string
 	TemplateId         string
 	Utilisation        map[string]*UtilisationReport
+	Guide              map[string]*domain.ProductGuides
 }
 
 type UtilisationReport struct {
@@ -72,6 +73,5 @@ func New(file string, repo domain.Repo) (*process, error) {
 		Utilisation:        make(map[string]*UtilisationReport),
 		PaletByDateProduce: make(map[string][]string),
 	}
-
 	return p, nil
 }
